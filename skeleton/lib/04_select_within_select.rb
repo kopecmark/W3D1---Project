@@ -35,6 +35,19 @@ end
 def larger_than_russia
   # List each country name where the population is larger than 'Russia'.
   execute(<<-SQL)
+    SELECT
+      rest.name
+    FROM
+      countries AS rest
+    WHERE
+      rest.population > (
+        SELECT
+          russia.population
+          FROM
+            countries AS russia
+          WHERE
+            russia.name = 'Russia'
+          )
   SQL
 end
 
@@ -42,6 +55,14 @@ def richer_than_england
   # Show the countries in Europe with a per capita GDP greater than
   # 'United Kingdom'.
   execute(<<-SQL)
+  SELECT rest.name
+  FROM countries AS rest
+  WHERE continent = 'Europe'
+  AND (rest.gdp / rest.population) > (
+    SELECT uk.gdp / uk.population
+    FROM countries AS uk
+    WHERE uk.name = 'United Kingdom'
+)
   SQL
 end
 
@@ -49,13 +70,42 @@ def neighbors_of_certain_b_countries
   # List the name and continent of countries in the continents containing
   # 'Belize', 'Belgium'.
   execute(<<-SQL)
-  SQL
+    SELECT other.name, other.continent
+    FROM countries AS other
+    WHERE other.continent IN (
+      SELECT bb.continent
+      FROM countries AS bb
+      WHERE bb.name IN ('Belize', 'Belgium')
+  )
+    SQL
 end
 
 def population_constraint
   # Which country has a population that is more than Canada but less than
   # Poland? Show the name and the population.
   execute(<<-SQL)
+    SELECT
+     countries.name,
+     countries.population
+    FROM
+     countries
+    WHERE
+     countries.population > (
+       SELECT
+         canada.population
+       FROM
+         countries canada
+       WHERE
+         canada.name = 'Canada'
+     )
+     AND countries.population < (
+       SELECT
+         poland.population
+       FROM
+         countries poland
+       WHERE
+         poland.name = 'Poland'
+     )
   SQL
 end
 
@@ -65,5 +115,12 @@ def sparse_continents
   # population.
   # Hint: Sometimes rewording the problem can help you see the solution.
   execute(<<-SQL)
+    SELECT countries.name, countries.continent, countries.population
+    FROM countries
+    WHERE countries.continent NOT IN (
+      SELECT c2.continent
+      FROM countries AS c2
+      WHERE c2.population >= 25000000
+    )
   SQL
 end
